@@ -1,9 +1,10 @@
-#!/usr/bin/env python3
+##!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
 import json
-from pathlib import Path
+import os.path
+import pathlib
 
 
 def add_airplane(race, path, number, model):
@@ -63,20 +64,20 @@ def select_airplanes(race, sel):
     return result
 
 
-def save_airplanes(file_name, way, save_home):
-    if save_home:
-        place = Path.home() / file_name
+def save_airplanes(file_name, race):
+    if race:
+        place = pathlib.Path.home() / file_name
         with open(place, "w") as f:
-            json.dump(way, f, ensure_ascii=False, indent=4)
+            json.dump(race, f, ensure_ascii=False, indent=4)
     else:
-        place = Path.cwd() / file_name
+        place = pathlib.Path.cwd() / file_name
         with open(place, "w") as f:
-            json.dump(way, f, ensure_ascii=False, indent=4)
+            json.dump(race, f, ensure_ascii=False, indent=4)
 
 
-def load_airplanes(file_name, save_home):
-    if save_home:
-        place = Path.home() / file_name
+def load_airplanes(file_name, race):
+    if race:
+        place = pathlib.Path.home() / file_name
         with open(place, "r", encoding="utf-8") as f:
             return json.load(f)
     else:
@@ -150,8 +151,9 @@ def main(command_line=None):
 
     args = parser.parse_args(command_line)
 
-    if Path(args.filename).exists():
-        airplanes = load_airplanes(args.filename, args.home)
+    is_dirty = False
+    if os.path.exists(args.filename):
+        airplanes = load_airplanes(args.filename)
     else:
         airplanes = []
 
@@ -162,16 +164,15 @@ def main(command_line=None):
             args.number,
             args.model
         )
-        save_airplanes(args.filename, airplanes, args.home)
-
+        is_dirty = True
     elif args.command == "display":
         display_airplanes(airplanes)
     elif args.command == "select":
         selected = select_airplanes(airplanes, args.result)
         display_airplanes(selected)
 
-    selected = select_airplanes(airplanes)
-    display_airplanes(selected)
+    if is_dirty:
+        save_airplanes(args.filename, airplanes)
 
 
 if __name__ == "__main__":
